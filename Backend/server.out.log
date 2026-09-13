@@ -1,0 +1,7 @@
+
+> dev
+> tsx watch src/config/index.ts
+
+◇ injected env (3) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+Server is running i 8000
+MongoDb Connection Sucessfull
