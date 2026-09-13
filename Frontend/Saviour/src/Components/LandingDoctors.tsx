@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "./api";
 import { FaStar } from "react-icons/fa";
 import { CiCircleChevLeft, CiCircleChevRight } from "react-icons/ci";
 import person1 from '../assets/LandingPage/person1.jpg';
@@ -57,7 +58,7 @@ const LandingDoctors = () => {
     useEffect(() => {
         let isCancelled = false;
         axios
-            .get("http://localhost:8000/api/v1/doctor")
+            .get(`${API_URL}/api/v1/doctor`)
             .then((res) => {
                 if (!isCancelled && res.data?.doctors && res.data.doctors.length > 0) {
                     setDoctors(res.data.doctors);
@@ -139,7 +140,7 @@ const LandingDoctors = () => {
                     const imageSrc = item.image?.startsWith("http") || item.image?.startsWith("data:")
                         ? item.image
                         : item.image?.startsWith("/uploads")
-                        ? `http://localhost:8000${item.image}`
+                        ? `${API_URL}${item.image}`
                         : item.image || person1;
 
                     return (

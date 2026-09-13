@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import API_URL from '../../api'
 import { FcGoogle } from 'react-icons/fc'
 import { FaFacebook } from 'react-icons/fa'
 import { FiAlertCircle, FiCheckCircle } from 'react-icons/fi'
@@ -30,7 +31,7 @@ const SignupFormm = () => {
         setLoading(true)
 
         try {
-            await axios.post('http://localhost:8000/api/v1/auth/signup', {
+            await axios.post(`${API_URL}/api/v1/auth/signup`, {
                 email, password,
             })
             setSuccess('Account created successfully! Redirecting to login...')

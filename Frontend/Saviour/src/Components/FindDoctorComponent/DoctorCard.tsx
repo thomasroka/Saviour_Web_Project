@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
+import API_URL from "../../api";
 
 export interface Doctor {
     _id?: string;
@@ -44,7 +45,7 @@ const DoctorCard = ({ doctors, loading }: DoctorCardProps) => {
                     const imageSrc = item.image?.startsWith("http")
                         ? item.image
                         : item.image
-                        ? `http://localhost:8000${item.image}`
+                        ? `${API_URL}${item.image}`
                         : "https://via.placeholder.com/300x300?text=Doctor";
 
                     return (

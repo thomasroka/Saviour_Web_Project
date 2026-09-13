@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
+import API_URL from '../api'
 import { FiLogOut, FiPlus, FiUserPlus, FiUsers, FiStar, FiMapPin, FiDollarSign, FiUpload, FiImage, FiTrash2 } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 
@@ -77,12 +78,12 @@ const AdminDashboard = () => {
             const formData = new FormData()
             formData.append('image', file)
             const token = getToken()
-            const response = await axios.post('http://localhost:8000/api/v1/admin/upload', formData, {
+            const response = await axios.post(`${API_URL}/api/v1/admin/upload`, formData, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             const url = response.data?.url
             if (url) {
-                setForm((prev) => ({ ...prev, image: `http://localhost:8000${url}` }))
+                setForm((prev) => ({ ...prev, image: `${API_URL}${url}` }))
             }
         } catch (err) {
             setError(getErrorMessage(err, 'Failed to upload image.'))
@@ -96,7 +97,7 @@ const AdminDashboard = () => {
         let cancelled = false
         const token = getToken()
 
-        axios.get('http://localhost:8000/api/v1/admin/doctor', {
+        axios.get(`${API_URL}/api/v1/admin/doctor`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((response) => {
@@ -130,7 +131,7 @@ const AdminDashboard = () => {
         setError('')
         try {
             const token = getToken()
-            const response = await axios.get('http://localhost:8000/api/v1/admin/doctor', {
+            const response = await axios.get(`${API_URL}/api/v1/admin/doctor`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             setDoctors(response.data?.doctors || [])
@@ -160,7 +161,7 @@ const AdminDashboard = () => {
                 available: form.available,
             }
             const token = getToken()
-            await axios.post('http://localhost:8000/api/v1/admin/doctor', data, {
+            await axios.post(`${API_URL}/api/v1/admin/doctor`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             setMessage('Doctor created successfully!')
@@ -184,7 +185,7 @@ const AdminDashboard = () => {
 
         try {
             const token = getToken()
-            await axios.delete(`http://localhost:8000/api/v1/admin/doctor/${id}`, {
+            await axios.delete(`${API_URL}/api/v1/admin/doctor/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             setDoctors((prev) => prev.filter((doctor) => doctor._id !== id))

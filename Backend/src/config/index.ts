@@ -15,7 +15,7 @@ const Port = process.env.PORT
 connectDb();
 const app = express();
 app.use(cors({
-    origin: 'http://localhost:5173', credentials: true
+    origin: "https://saviourlive.vercel.app", credentials: true
     // cookie used so
 }))
 app.use(express.json());

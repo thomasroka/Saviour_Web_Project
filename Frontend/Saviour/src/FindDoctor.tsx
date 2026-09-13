@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import API_URL from "./api";
 import Navbar from "./Components/Navbar";
 import Hero from "./Components/FindDoctorComponent/Hero";
 import DoctorFilter from "./Components/FindDoctorComponent/DoctorFilter";
@@ -16,7 +17,7 @@ const FindDoctor = () => {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/api/v1/doctor");
+                const response = await axios.get(`${API_URL}/api/v1/doctor`);
                 setDoctors(response.data.doctors || []);
             } catch (err) {
                 console.error("Error fetching doctors:", err);

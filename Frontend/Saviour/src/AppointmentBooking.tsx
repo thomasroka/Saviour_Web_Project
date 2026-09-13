@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "./api";
 import { 
     FiCalendar, 
     FiCheckCircle, 
@@ -81,7 +82,7 @@ const AppointmentBooking = () => {
                 doctorId: selectedDoctor._id,
             };
 
-            const response = await axios.post("http://localhost:8000/api/v1/patient", payload, {
+            const response = await axios.post(`${API_URL}/api/v1/patient`, payload, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
                 withCredentials: true,
             });

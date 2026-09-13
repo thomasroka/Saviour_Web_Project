@@ -27,8 +27,8 @@ export const signin = async (req: Request, res: Response) => {
 
         res.cookie("token", token, {
             httpOnly: true,
-            sameSite: "lax",
-            secure: false// true in production (HTTPS)
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: process.env.NODE_ENV === "production", // true in production (HTTPS required for sameSite:none)
         });
         res.json({
             message: 'You are logged in',

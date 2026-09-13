@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "./api";
 import { 
     FiCalendar, 
     FiMapPin, 
@@ -52,7 +53,7 @@ const MyAppointments = () => {
             const userEmail = user?.email || "";
             
             const params = userEmail ? { email: userEmail } : {};
-            const response = await axios.get("http://localhost:8000/api/v1/patient", {
+            const response = await axios.get(`${API_URL}/api/v1/patient`, {
                 params,
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
                 withCredentials: true,
@@ -78,7 +79,7 @@ const MyAppointments = () => {
 
         setCancellingId(id);
         try {
-            await axios.delete(`http://localhost:8000/api/v1/patient/${id}`);
+            await axios.delete(`${API_URL}/api/v1/patient/${id}`);
             setAppointments((prev) => prev.filter((item) => item._id !== id));
         } catch (err: any) {
             alert(err.response?.data?.message || "Failed to cancel appointment.");
@@ -174,7 +175,7 @@ const MyAppointments = () => {
                             const doctorImage = doctor?.image
                                 ? doctor.image.startsWith("http")
                                     ? doctor.image
-                                    : `http://localhost:8000${doctor.image}`
+                                    : `${API_URL}${doctor.image}`
                                 : null;
 
                             return (

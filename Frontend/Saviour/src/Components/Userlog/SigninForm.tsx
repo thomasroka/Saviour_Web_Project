@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import API_URL from '../../api'
 import { FcGoogle } from 'react-icons/fc'
 import { FaFacebook } from 'react-icons/fa'
 import { FiAlertCircle } from 'react-icons/fi'
@@ -25,7 +26,7 @@ const SigninForm = () => {
 
         try {
             const data = { email, password }
-            const response = await axios.post('http://localhost:8000/api/v1/auth/signin', data, {
+            const response = await axios.post(`${API_URL}/api/v1/auth/signin`, data, {
                 withCredentials: true,
             })
 

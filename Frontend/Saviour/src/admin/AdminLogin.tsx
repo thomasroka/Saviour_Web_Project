@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import API_URL from '../api'
 import { FiLock, FiMail, FiUserCheck } from 'react-icons/fi'
 
 const AdminLogin = () => {
@@ -21,7 +22,7 @@ const AdminLogin = () => {
 
         try {
             const data = { email, password }
-            const response = await axios.post('http://localhost:8000/api/v1/admin/signin', data, {
+            const response = await axios.post(`${API_URL}/api/v1/admin/signin`, data, {
                 withCredentials: true,
             })
 
