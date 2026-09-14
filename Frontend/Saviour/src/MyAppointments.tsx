@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import API_URL from "./api";
-import { 
-    FiCalendar, 
-    FiMapPin, 
-    FiUser, 
-    FiPhone, 
-    FiMail, 
-    FiCheckCircle, 
-    FiTrash2, 
-    FiRefreshCw, 
+import {
+    FiCalendar,
+    FiMapPin,
+    FiUser,
+    FiPhone,
+    FiMail,
+    FiCheckCircle,
+    FiTrash2,
+    FiRefreshCw,
     FiPlus
 } from "react-icons/fi";
 import Navbar from "./Components/Navbar";
@@ -51,7 +51,7 @@ const MyAppointments = () => {
         try {
             const token = localStorage.getItem("user_token") || localStorage.getItem("token") || "";
             const userEmail = user?.email || "";
-            
+
             const params = userEmail ? { email: userEmail } : {};
             const response = await axios.get(`${API_URL}/api/v1/patient`, {
                 params,
@@ -104,8 +104,8 @@ const MyAppointments = () => {
                             My Appointments
                         </h1>
                         <p className="text-slate-500 text-sm sm:text-base mt-1">
-                            {user?.email 
-                                ? `Showing all confirmed appointments registered under ${user.email}` 
+                            {user?.email
+                                ? `Showing all confirmed appointments registered under ${user.email}`
                                 : "View and manage all your scheduled doctor appointments."}
                         </p>
                     </div>
@@ -156,8 +156,8 @@ const MyAppointments = () => {
                         </div>
                         <h3 className="text-xl font-bold text-slate-800">No appointments found</h3>
                         <p className="text-slate-500 text-sm mt-1.5 max-w-md mx-auto">
-                            {user?.email 
-                                ? "You haven't scheduled any doctor visits yet." 
+                            {user?.email
+                                ? "You haven't scheduled any doctor visits yet."
                                 : "No confirmed appointments were found. Book your first appointment today!"}
                         </p>
                         <Link

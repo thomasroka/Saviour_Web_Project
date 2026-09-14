@@ -1,5 +1,6 @@
 import express from "express"
 import dotenv from "dotenv"
+dotenv.config(); // must be first before reading any process.env
 import connectDb from "./db.js";
 import cors from "cors"
 import cookieParser from "cookie-parser";
@@ -10,13 +11,13 @@ import { auth } from "../Middlewares/authMiddleWare.js";
 import adminRoute from "../routes/admin.route.js";
 import doctorRoute from "../routes/doctor.route.js";
 import patientRoute from "../routes/patient.route.js";
-dotenv.config();
-const Port = process.env.PORT
+const Port = process.env.PORT || 8000
 connectDb();
 const app = express();
+app.set("trust proxy", 1);
 app.use(cors({
-    origin: "https://saviourlive.vercel.app", credentials: true
-    // cookie used so
+    origin: "https://saviourlive.vercel.app",
+    credentials: true,
 }))
 app.use(express.json());
 app.use(cookieParser())

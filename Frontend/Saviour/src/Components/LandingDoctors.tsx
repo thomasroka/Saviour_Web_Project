@@ -1,77 +1,45 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import API_URL from "./api";
+import API_URL from "../api";
 import { FaStar } from "react-icons/fa";
 import { CiCircleChevLeft, CiCircleChevRight } from "react-icons/ci";
-import person1 from '../assets/LandingPage/person1.jpg';
-import person2 from '../assets/LandingPage/person2.jpg';
-import person3 from '../assets/LandingPage/person3.jpg';
-import person4 from '../assets/LandingPage/person4.jpg';
 import type { Doctor } from "./FindDoctorComponent/DoctorCard";
 
-const fallbackDoctors: Doctor[] = [
-    {
-        name: 'Dr. Ram Bahadur Xettri',
-        specialization: 'Gastroenterologist',
-        image: person1,
-        ratings: 4.9,
-        location: 'Kathmandu Clinic',
-        fee: 500,
-        available: true,
-    },
-    {
-        name: 'Dr. Sarah Jenkins',
-        specialization: 'Cardiologist',
-        image: person2,
-        ratings: 4.8,
-        location: 'City Heart Center',
-        fee: 650,
-        available: true,
-    },
-    {
-        name: 'Dr. Ananya Sharma',
-        specialization: 'Dermatologist',
-        image: person3,
-        ratings: 5.0,
-        location: 'Skin Health Hub',
-        fee: 600,
-        available: true,
-    },
-    {
-        name: 'Dr. Michael Chen',
-        specialization: 'Neurologist',
-        image: person4,
-        ratings: 4.7,
-        location: 'Metro Neuro Hospital',
-        fee: 750,
-        available: true,
-    },
-];
-
 const LandingDoctors = () => {
-    const [doctors, setDoctors] = useState<Doctor[]>(fallbackDoctors);
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(true);
+    const [canScrollRight, setCanScrollRight] = useState(false);
 
     useEffect(() => {
         let isCancelled = false;
+        setLoading(true);
         axios
             .get(`${API_URL}/api/v1/doctor`)
             .then((res) => {
-                if (!isCancelled && res.data?.doctors && res.data.doctors.length > 0) {
+                if (!isCancelled && res.data?.doctors) {
                     setDoctors(res.data.doctors);
                 }
             })
-            .catch(() => {
-                // fallback doctors already set
+            .catch((err) => {
+                console.error("Error fetching doctors for landing page:", err);
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setLoading(false);
+                }
             });
 
         return () => {
             isCancelled = true;
         };
     }, []);
+
+    useEffect(() => {
+        updateScrollButtons();
+    }, [doctors]);
 
     const updateScrollButtons = () => {
         if (scrollContainerRef.current) {
@@ -92,6 +60,30 @@ const LandingDoctors = () => {
             scrollContainerRef.current.scrollBy({ left: 340, behavior: "smooth" });
         }
     };
+
+    if (loading) {
+        return (
+            <section className="mb-24 px-6 md:px-12 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-10">
+                    <div>
+                        <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold tracking-wider uppercase mb-2">
+                            Top Specialists
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+                            Best Doctors
+                        </h2>
+                    </div>
+                </div>
+                <div className="flex justify-center items-center py-20">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                </div>
+            </section>
+        );
+    }
+
+    if (doctors.length === 0) {
+        return null;
+    }
 
     return (
         <section className="mb-24 px-6 md:px-12 max-w-7xl mx-auto">
@@ -140,8 +132,10 @@ const LandingDoctors = () => {
                     const imageSrc = item.image?.startsWith("http") || item.image?.startsWith("data:")
                         ? item.image
                         : item.image?.startsWith("/uploads")
-                        ? `${API_URL}${item.image}`
-                        : item.image || person1;
+                            ? `${API_URL}${item.image}`
+                            : item.image
+                                ? `${API_URL}/${item.image.replace(/^\/+/, "")}`
+                                : "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500&auto=format&fit=crop&q=60";
 
                     return (
                         <div
@@ -167,11 +161,10 @@ const LandingDoctors = () => {
                                         {item.ratings ?? 4.8}
                                     </span>
                                     <span
-                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                            item.available !== false && item.available !== "false"
+                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.available !== false && item.available !== "false"
                                                 ? "bg-emerald-50 text-emerald-600"
                                                 : "bg-red-50 text-red-600"
-                                        }`}
+                                            }`}
                                     >
                                         {item.available !== false && item.available !== "false"
                                             ? "Available"

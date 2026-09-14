@@ -83,7 +83,7 @@ const AdminDashboard = () => {
             })
             const url = response.data?.url
             if (url) {
-                setForm((prev) => ({ ...prev, image: `${API_URL}${url}` }))
+                setForm((prev) => ({ ...prev, image: url }))
             }
         } catch (err) {
             setError(getErrorMessage(err, 'Failed to upload image.'))
@@ -282,7 +282,12 @@ const AdminDashboard = () => {
                             <p className='text-xs text-gray-400 mt-1.5'>Tip: click the <FiUpload className='inline' size={12} /> image icon to pick a file from your computer.</p>
                             {form.image && (
                                 <div className='mt-3 w-full h-40 rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50'>
-                                    <img className='h-full w-full object-cover' src={form.image} alt="Doctor preview" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                    <img
+                                        className='h-full w-full object-cover'
+                                        src={form.image.startsWith('http') || form.image.startsWith('data:') ? form.image : `${API_URL}${form.image.startsWith('/') ? '' : '/'}${form.image}`}
+                                        alt="Doctor preview"
+                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                    />
                                 </div>
                             )}
                             <input type="file" accept="image/*" ref={fileInputRef} className='hidden' onChange={handleFileUpload} />
@@ -339,7 +344,11 @@ const AdminDashboard = () => {
                                 {doctors.map((doctor) => (
                                     <div key={doctor._id} className="flex flex-col bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition">
                                         <div className='w-full h-44 p-3 pb-0'>
-                                            <img className="rounded-xl h-full w-full object-cover object-top bg-white" src={doctor.image} alt={doctor.name} />
+                                            <img
+                                                className="rounded-xl h-full w-full object-cover object-top bg-white"
+                                                src={doctor.image?.startsWith('http') || doctor.image?.startsWith('data:') ? doctor.image : `${API_URL}${doctor.image?.startsWith('/') ? '' : '/'}${doctor.image}`}
+                                                alt={doctor.name}
+                                            />
                                         </div>
                                         <div className="p-4 flex-1 flex flex-col">
                                             <p className="font-bold text-lg">{doctor.name}</p>

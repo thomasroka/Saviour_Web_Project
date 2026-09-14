@@ -70,10 +70,17 @@ export const addDoctor = async (req: Request, res: Response) => {
             return
         }
 
+        // Normalize image path: if it contains /uploads/, store only /uploads/...
+        let cleanImage = image;
+        const uploadIndex = image.indexOf('/uploads/');
+        if (uploadIndex !== -1) {
+            cleanImage = image.substring(uploadIndex);
+        }
+
         const doctor = await Doctor.create({
             name,
             specialization,
-            image,
+            image: cleanImage,
             ratings,
             location,
             fee,

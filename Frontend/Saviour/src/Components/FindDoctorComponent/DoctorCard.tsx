@@ -45,8 +45,8 @@ const DoctorCard = ({ doctors, loading }: DoctorCardProps) => {
                     const imageSrc = item.image?.startsWith("http")
                         ? item.image
                         : item.image
-                        ? `${API_URL}${item.image}`
-                        : "https://via.placeholder.com/300x300?text=Doctor";
+                            ? `${API_URL}${item.image}`
+                            : "https://via.placeholder.com/300x300?text=Doctor";
 
                     return (
                         <div
@@ -72,11 +72,10 @@ const DoctorCard = ({ doctors, loading }: DoctorCardProps) => {
                                         {item.ratings ?? 4.8}
                                     </span>
                                     <span
-                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                            item.available !== false && item.available !== "false"
+                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.available !== false && item.available !== "false"
                                                 ? "bg-emerald-50 text-emerald-600"
                                                 : "bg-red-50 text-red-600"
-                                        }`}
+                                            }`}
                                     >
                                         {item.available !== false && item.available !== "false"
                                             ? "Available"
