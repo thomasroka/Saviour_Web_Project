@@ -21,10 +21,25 @@ const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
 ];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, "")))) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+    }
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
+    next();
+});
+
 app.use(cors({
     origin: allowedOrigins,
     credentials: true,
-}))
+}));
 app.use(express.json());
 app.use(cookieParser())
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
