@@ -82,7 +82,30 @@ const LandingDoctors = () => {
     }
 
     if (doctors.length === 0) {
-        return null;
+        return (
+            <section className="mb-24 px-6 md:px-12 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold tracking-wider uppercase mb-2">
+                            Top Specialists
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+                            Best Doctors
+                        </h2>
+                    </div>
+                </div>
+                <div className="text-center py-12 bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs">
+                    <p className="text-lg font-bold text-slate-700 mb-2">No doctors currently available</p>
+                    <p className="text-slate-500 text-sm mb-4">Please check back soon or add doctors via the Admin Dashboard.</p>
+                    <Link
+                        to="/find-doctor"
+                        className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm transition"
+                    >
+                        Browse All Doctors
+                    </Link>
+                </div>
+            </section>
+        );
     }
 
     return (

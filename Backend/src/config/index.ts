@@ -15,8 +15,19 @@ const Port = process.env.PORT || 8000
 connectDb();
 const app = express();
 app.set("trust proxy", 1);
+const allowedOrigins = [
+    "https://saviourlive.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+];
 app.use(cors({
-    origin: "https://saviourlive.vercel.app",
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS: Origin ${origin} not allowed`));
+        }
+    },
     credentials: true,
 }))
 app.use(express.json());
