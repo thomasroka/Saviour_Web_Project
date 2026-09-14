@@ -15,21 +15,15 @@ const Port = process.env.PORT || 8000
 connectDb();
 const app = express();
 app.set("trust proxy", 1);
-const allowedOrigins = [
-    "https://saviourlive.vercel.app",
-    "https://www.saviourlive.vercel.app",
-    "http://localhost:5173",
-    "http://localhost:3000",
-];
-
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin && (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, "")))) {
+    if (origin) {
         res.setHeader("Access-Control-Allow-Origin", origin);
-        res.setHeader("Access-Control-Allow-Credentials", "true");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
     }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+
     if (req.method === "OPTIONS") {
         return res.sendStatus(204);
     }
@@ -37,7 +31,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => callback(null, true),
     credentials: true,
 }));
 app.use(express.json());
