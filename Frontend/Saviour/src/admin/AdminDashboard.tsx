@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import API_URL from '../api'
-import { FiLogOut, FiPlus, FiUserPlus, FiUsers, FiStar, FiMapPin, FiDollarSign, FiUpload, FiImage, FiTrash2, FiEdit3, FiX } from 'react-icons/fi'
+import { FiLogOut, FiPlus, FiUser, FiUserPlus, FiUsers, FiStar, FiMapPin, FiDollarSign, FiUpload, FiImage, FiTrash2, FiEdit3, FiX } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 
 interface Doctor {
@@ -54,6 +54,27 @@ const getImageUrl = (image?: string) => {
     if (!image) return ''
     if (image.startsWith('http') || image.startsWith('data:')) return image
     return `${API_BASE_URL}/${image.replace(/^\/+/, '')}`
+}
+
+interface DoctorImageProps {
+    src?: string
+    alt: string
+    className?: string
+}
+
+const DoctorImage = ({ src, alt, className = '' }: DoctorImageProps) => {
+    const [failed, setFailed] = useState(false)
+
+    if (!src || failed) {
+        return (
+            <div className={`${className} flex flex-col items-center justify-center gap-2 bg-gray-100 text-gray-400`}>
+                <FiUser size={32} />
+                <span className="text-xs font-medium">Photo unavailable</span>
+            </div>
+        )
+    }
+
+    return <img className={className} src={src} alt={alt} onError={() => setFailed(true)} />
 }
 
 const isDoctorAvailable = (available: string | boolean) => available === true || available === 'true'
@@ -348,11 +369,11 @@ const AdminDashboard = () => {
                             <p className='text-xs text-gray-400 mt-1.5'>Tip: click the <FiUpload className='inline' size={12} /> image icon to pick a file from your computer.</p>
                             {form.image && (
                                 <div className='mt-3 w-full h-40 rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50'>
-                                    <img
+                                    <DoctorImage
+                                        key={form.image}
                                         className='h-full w-full object-contain object-center'
                                         src={getImageUrl(form.image)}
                                         alt="Doctor preview"
-                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                                     />
                                 </div>
                             )}
@@ -416,11 +437,12 @@ const AdminDashboard = () => {
                                 <p className="text-sm text-gray-400 mt-1">Fill the form to add the first doctor.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-6">
                                 {doctors.map((doctor) => (
                                     <div key={doctor._id} className={`flex flex-col bg-slate-50 border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition ${editingDoctorId === doctor._id ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-100'}`}>
-                                        <div className='w-full h-44 p-3 pb-0'>
-                                            <img
+                                        <div className='w-full h-56 p-3 pb-0'>
+                                            <DoctorImage
+                                                key={doctor.image}
                                                 className="rounded-xl h-full w-full object-contain object-center bg-gray-100 p-2"
                                                 src={getImageUrl(doctor.image)}
                                                 alt={doctor.name}
