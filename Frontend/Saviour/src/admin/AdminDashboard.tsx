@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import API_URL from '../api'
-import { FiLogOut, FiPlus, FiUserPlus, FiUsers, FiStar, FiMapPin, FiDollarSign, FiUpload, FiImage, FiTrash2 } from 'react-icons/fi'
+import { FiLogOut, FiPlus, FiUserPlus, FiUsers, FiStar, FiMapPin, FiDollarSign, FiUpload, FiImage, FiTrash2, FiEdit3, FiX } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 
 interface Doctor {
     _id: string
     name: string
     specialization: string
+    email: string
+    phonenumber?: number
     image: string
     ratings?: number
     location: string
@@ -46,6 +48,30 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
     return fallback
 }
 
+const API_BASE_URL = API_URL.replace(/\/+$/, '')
+
+const getImageUrl = (image?: string) => {
+    if (!image) return ''
+    if (image.startsWith('http') || image.startsWith('data:')) return image
+    return `${API_BASE_URL}/${image.replace(/^\/+/, '')}`
+}
+
+const isDoctorAvailable = (available: string | boolean) => available === true || available === 'true'
+
+const doctorToForm = (doctor: Doctor): DoctorForm => ({
+    name: doctor.name,
+    specialization: doctor.specialization,
+    email: doctor.email,
+    phonenumber: doctor.phonenumber?.toString() || '',
+    image: doctor.image,
+    ratings: doctor.ratings?.toString() || '',
+    location: doctor.location,
+    fee: doctor.fee.toString(),
+    available: isDoctorAvailable(doctor.available),
+})
+
+const getToken = () => localStorage.getItem('admin_token') || ''
+
 const AdminDashboard = () => {
     const [form, setForm] = useState<DoctorForm>(emptyForm)
     const [doctors, setDoctors] = useState<Doctor[]>([])
@@ -54,11 +80,10 @@ const AdminDashboard = () => {
     const [message, setMessage] = useState<string>('')
     const [error, setError] = useState<string>('')
     const [uploading, setUploading] = useState<boolean>(false)
+    const [editingDoctorId, setEditingDoctorId] = useState<string | null>(null)
     const [deletingDoctorId, setDeletingDoctorId] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const navigate = useNavigate()
-
-    const getToken = () => localStorage.getItem('admin_token') || ''
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target as HTMLInputElement
@@ -69,8 +94,21 @@ const AdminDashboard = () => {
     }
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
+        const input = e.currentTarget
+        const file = input.files?.[0]
         if (!file) return
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
+        if (!allowedTypes.includes(file.type)) {
+            setError('Use a JPG, PNG, WEBP, GIF, or AVIF image.')
+            input.value = ''
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setError('Image must be 5 MB or smaller.')
+            input.value = ''
+            return
+        }
 
         setUploading(true)
         setError('')
@@ -78,18 +116,19 @@ const AdminDashboard = () => {
             const formData = new FormData()
             formData.append('image', file)
             const token = getToken()
-            const response = await axios.post(`${API_URL}/api/v1/admin/upload`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/api/v1/admin/upload`, formData, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             const url = response.data?.url
-            if (url) {
-                setForm((prev) => ({ ...prev, image: url }))
+            if (!url) {
+                throw new Error('Upload response did not include an image URL')
             }
+            setForm((prev) => ({ ...prev, image: url }))
         } catch (err) {
             setError(getErrorMessage(err, 'Failed to upload image.'))
         } finally {
             setUploading(false)
-            e.target.value = ''
+            input.value = ''
         }
     }
 
@@ -97,7 +136,7 @@ const AdminDashboard = () => {
         let cancelled = false
         const token = getToken()
 
-        axios.get(`${API_URL}/api/v1/admin/doctor`, {
+        axios.get(`${API_BASE_URL}/api/v1/admin/doctor`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((response) => {
@@ -131,7 +170,7 @@ const AdminDashboard = () => {
         setError('')
         try {
             const token = getToken()
-            const response = await axios.get(`${API_URL}/api/v1/admin/doctor`, {
+            const response = await axios.get(`${API_BASE_URL}/api/v1/admin/doctor`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             setDoctors(response.data?.doctors || [])
@@ -161,17 +200,40 @@ const AdminDashboard = () => {
                 available: form.available,
             }
             const token = getToken()
-            await axios.post(`${API_URL}/api/v1/admin/doctor`, data, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            setMessage('Doctor created successfully!')
-            setForm(emptyForm)
+            if (editingDoctorId) {
+                await axios.put(`${API_BASE_URL}/api/v1/admin/doctor/${editingDoctorId}`, data, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                setMessage('Doctor updated successfully!')
+            } else {
+                await axios.post(`${API_BASE_URL}/api/v1/admin/doctor`, data, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                setMessage('Doctor created successfully!')
+            }
+            setForm({ ...emptyForm })
+            setEditingDoctorId(null)
             await refreshDoctors()
         } catch (err) {
-            setError(getErrorMessage(err, 'Failed to create doctor.'))
+            setError(getErrorMessage(err, editingDoctorId ? 'Failed to update doctor.' : 'Failed to create doctor.'))
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleEditDoctor = (doctor: Doctor) => {
+        setForm(doctorToForm(doctor))
+        setEditingDoctorId(doctor._id)
+        setMessage('')
+        setError('')
+        document.getElementById('doctor-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    const handleCancelEdit = () => {
+        setForm({ ...emptyForm })
+        setEditingDoctorId(null)
+        setMessage('')
+        setError('')
     }
 
     const handleDeleteDoctor = async (id: string, name: string) => {
@@ -185,10 +247,14 @@ const AdminDashboard = () => {
 
         try {
             const token = getToken()
-            await axios.delete(`${API_URL}/api/v1/admin/doctor/${id}`, {
+            await axios.delete(`${API_BASE_URL}/api/v1/admin/doctor/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             setDoctors((prev) => prev.filter((doctor) => doctor._id !== id))
+            if (editingDoctorId === id) {
+                setForm({ ...emptyForm })
+                setEditingDoctorId(null)
+            }
             setMessage(`Doctor "${name}" deleted successfully!`)
         } catch (err) {
             setError(getErrorMessage(err, 'Failed to delete doctor.'))
@@ -225,10 +291,10 @@ const AdminDashboard = () => {
 
             <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col lg:flex-row gap-8">
                 {/* Add Doctor Form */}
-                <section className="w-full lg:w-96 bg-white rounded-2xl shadow-sm border border-gray-200 h-fit">
+                <section id="doctor-form" className={`w-full lg:w-96 bg-white rounded-2xl shadow-sm border h-fit scroll-mt-28 ${editingDoctorId ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-200'}`}>
                     <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
-                        <FiPlus className="text-blue-600" size={18} />
-                        <h2 className="font-bold text-gray-900">Add New Doctor</h2>
+                        {editingDoctorId ? <FiEdit3 className="text-blue-600" size={18} /> : <FiPlus className="text-blue-600" size={18} />}
+                        <h2 className="font-bold text-gray-900">{editingDoctorId ? 'Edit Doctor' : 'Add New Doctor'}</h2>
                     </div>
 
                     <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col gap-4">
@@ -283,8 +349,8 @@ const AdminDashboard = () => {
                             {form.image && (
                                 <div className='mt-3 w-full h-40 rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50'>
                                     <img
-                                        className='h-full w-full object-cover'
-                                        src={form.image.startsWith('http') || form.image.startsWith('data:') ? form.image : `${API_URL}${form.image.startsWith('/') ? '' : '/'}${form.image}`}
+                                        className='h-full w-full object-contain object-center'
+                                        src={getImageUrl(form.image)}
                                         alt="Doctor preview"
                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                                     />
@@ -310,13 +376,23 @@ const AdminDashboard = () => {
                             <input id="available" name="available" type="checkbox" checked={form.available} onChange={handleChange} className='w-4 h-4 cursor-pointer' />
                             <label htmlFor="available" className='text-sm text-gray-700 cursor-pointer'>Currently Available</label>
                         </div>
-                        <button type="submit" disabled={loading} className='cursor-pointer h-12 w-full rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors mt-1 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center shadow-sm'>
-                            {loading ? (
-                                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                'Add Doctor'
+                        <div className='flex gap-3 mt-1'>
+                            <button type="submit" disabled={loading || uploading} className='cursor-pointer h-12 flex-1 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center shadow-sm'>
+                                {loading ? (
+                                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : editingDoctorId ? (
+                                    'Save Changes'
+                                ) : (
+                                    'Add Doctor'
+                                )}
+                            </button>
+                            {editingDoctorId && (
+                                <button type="button" onClick={handleCancelEdit} disabled={loading} className='cursor-pointer h-12 px-4 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors disabled:opacity-60 flex items-center justify-center gap-2'>
+                                    <FiX size={16} />
+                                    Cancel
+                                </button>
                             )}
-                        </button>
+                        </div>
                     </form>
                 </section>
 
@@ -342,11 +418,11 @@ const AdminDashboard = () => {
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                                 {doctors.map((doctor) => (
-                                    <div key={doctor._id} className="flex flex-col bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition">
+                                    <div key={doctor._id} className={`flex flex-col bg-slate-50 border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition ${editingDoctorId === doctor._id ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-100'}`}>
                                         <div className='w-full h-44 p-3 pb-0'>
                                             <img
-                                                className="rounded-xl h-full w-full object-cover object-top bg-white"
-                                                src={doctor.image?.startsWith('http') || doctor.image?.startsWith('data:') ? doctor.image : `${API_URL}${doctor.image?.startsWith('/') ? '' : '/'}${doctor.image}`}
+                                                className="rounded-xl h-full w-full object-contain object-center bg-gray-100 p-2"
+                                                src={getImageUrl(doctor.image)}
                                                 alt={doctor.name}
                                             />
                                         </div>
@@ -370,25 +446,37 @@ const AdminDashboard = () => {
                                                 ) : null}
                                             </div>
                                             <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between">
-                                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${doctor.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                                                    {doctor.available ? 'Available' : 'Unavailable'}
+                                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${isDoctorAvailable(doctor.available) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                                    {isDoctorAvailable(doctor.available) ? 'Available' : 'Unavailable'}
                                                 </span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteDoctor(doctor._id, doctor.name)}
-                                                    disabled={deletingDoctorId === doctor._id}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    title={`Delete ${doctor.name}`}
-                                                >
-                                                    {deletingDoctorId === doctor._id ? (
-                                                        <div className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                                                    ) : (
-                                                        <>
-                                                            <FiTrash2 size={13} />
-                                                            <span>Delete</span>
-                                                        </>
-                                                    )}
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleEditDoctor(doctor)}
+                                                        disabled={deletingDoctorId === doctor._id}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        title={`Edit ${doctor.name}`}
+                                                    >
+                                                        <FiEdit3 size={13} />
+                                                        <span>Edit</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteDoctor(doctor._id, doctor.name)}
+                                                        disabled={deletingDoctorId === doctor._id}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        title={`Delete ${doctor.name}`}
+                                                    >
+                                                        {deletingDoctorId === doctor._id ? (
+                                                            <div className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                                        ) : (
+                                                            <>
+                                                                <FiTrash2 size={13} />
+                                                                <span>Delete</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

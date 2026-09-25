@@ -55,7 +55,7 @@ const DoctorCard = ({ doctors, loading }: DoctorCardProps) => {
                         >
                             <div className="w-full h-60 p-4 pb-0 bg-slate-50">
                                 <img
-                                    className="rounded-xl h-full w-full object-cover object-top"
+                                    className="rounded-xl h-full w-full object-contain object-center bg-gray-100 p-2"
                                     src={imageSrc}
                                     alt={item.name}
                                 />

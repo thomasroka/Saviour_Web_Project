@@ -1,4 +1,6 @@
 import express from "express"
+import type { NextFunction, Request, Response } from "express"
+import multer from "multer"
 import dotenv from "dotenv"
 dotenv.config(); // must be first before reading any process.env
 import connectDb from "./db.js";
@@ -8,6 +10,7 @@ import path from "path"
 import { signup } from "../controllers/signup.js";
 import { signin } from "../controllers/signin.js";
 import { auth } from "../Middlewares/authMiddleWare.js";
+import { getUploadedImage } from "../controllers/admin.js";
 import adminRoute from "../routes/admin.route.js";
 import doctorRoute from "../routes/doctor.route.js";
 import patientRoute from "../routes/patient.route.js";
@@ -37,6 +40,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser())
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+app.get('/uploads/:filename', getUploadedImage)
 app.get('/', (req, res) => {
     res.json({ message: 'lol' })
 
@@ -59,6 +63,22 @@ app.post('/api/v1/auth/signin', signin)
 app.use('/api/v1/doctor', doctorRoute)
 app.use('/api/v1/admin', adminRoute)
 app.use('/api/v1/patient', patientRoute)
+app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    if (error instanceof multer.MulterError) {
+        const message = error.code === 'LIMIT_FILE_SIZE'
+            ? 'Image must be 5 MB or smaller'
+            : error.message
+        res.status(400).json({ message })
+        return
+    }
+
+    if (error instanceof Error && error.message.startsWith('Use a ')) {
+        res.status(400).json({ message: error.message })
+        return
+    }
+
+    res.status(500).json({ message: 'Server error' })
+})
 app.listen(Port, () => {
     console.log(`Server is running i ${Port}`)
 });
