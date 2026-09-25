@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import API_URL from '../api'
-import { FiLogOut, FiPlus, FiUser, FiUserPlus, FiUsers, FiStar, FiMapPin, FiDollarSign, FiUpload, FiImage, FiTrash2, FiEdit3, FiX } from 'react-icons/fi'
+import { FiLogOut, FiPlus, FiUser, FiUserPlus, FiUsers, FiStar, FiUpload, FiImage, FiTrash2, FiEdit3, FiX } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 
 interface Doctor {
@@ -437,68 +437,63 @@ const AdminDashboard = () => {
                                 <p className="text-sm text-gray-400 mt-1">Fill the form to add the first doctor.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-6 justify-items-center">
                                 {doctors.map((doctor) => (
-                                    <div key={doctor._id} className={`min-w-0 flex flex-col bg-slate-50 border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition ${editingDoctorId === doctor._id ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-100'}`}>
-                                        <div className='w-full h-64 p-3 pb-0'>
+                                    <div key={doctor._id} className={`w-full max-w-[320px] min-w-0 flex flex-col bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group ${editingDoctorId === doctor._id ? 'ring-2 ring-blue-400' : ''}`}>
+                                        <div className="w-full h-60 p-4 pb-0 bg-slate-50">
                                             <DoctorImage
                                                 key={doctor.image}
-                                                className="rounded-xl h-full w-full object-contain object-center bg-gray-100 p-2"
+                                                className="rounded-xl h-full w-full object-cover object-top"
                                                 src={getImageUrl(doctor.image)}
                                                 alt={doctor.name}
                                             />
                                         </div>
                                         <div className="min-w-0 p-5 flex-1 flex flex-col">
-                                            <p className="font-bold text-xl break-words">{doctor.name}</p>
-                                            <p className="text-blue-600 text-sm font-medium break-words">{doctor.specialization}</p>
-                                            <div className="flex min-w-0 items-start gap-1 text-gray-600 text-sm mt-3">
-                                                <FiMapPin className="text-gray-400 shrink-0 mt-0.5" size={14} />
-                                                <span className="min-w-0 break-words">{doctor.location}</span>
-                                            </div>
-                                            <div className="flex flex-wrap items-center justify-between gap-2 mt-3 text-sm">
-                                                <div className="flex items-center gap-1 text-gray-700 font-semibold">
-                                                    <FiDollarSign className="text-gray-400" size={14} />
-                                                    <span>Rs. {doctor.fee}</span>
-                                                </div>
-                                                {doctor.ratings ? (
-                                                    <div className="flex items-center gap-1 text-amber-500 font-semibold">
-                                                        <FiStar size={14} />
-                                                        <span>{doctor.ratings}</span>
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                            <div className="mt-auto pt-4 border-t border-slate-200">
-                                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${isDoctorAvailable(doctor.available) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                            <p className="font-bold text-lg mb-1 text-slate-800 break-words">{doctor.name}</p>
+                                            <p className="text-blue-600 font-medium text-sm mb-3 break-words">{doctor.specialization}</p>
+
+                                            <div className="flex justify-between items-center text-xs text-slate-500 mb-4 pb-3 border-b border-slate-100">
+                                                <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                                                    <FiStar className="text-amber-400 text-sm" />
+                                                    {doctor.ratings ?? 4.8}
+                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isDoctorAvailable(doctor.available) ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
                                                     {isDoctorAvailable(doctor.available) ? 'Available' : 'Unavailable'}
                                                 </span>
-                                                <div className="mt-3 grid grid-cols-2 gap-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEditDoctor(doctor)}
-                                                        disabled={deletingDoctorId === doctor._id}
-                                                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        title={`Edit ${doctor.name}`}
-                                                    >
-                                                        <FiEdit3 size={14} />
-                                                        <span>Edit</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteDoctor(doctor._id, doctor.name)}
-                                                        disabled={deletingDoctorId === doctor._id}
-                                                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        title={`Delete ${doctor.name}`}
-                                                    >
-                                                        {deletingDoctorId === doctor._id ? (
-                                                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                                                        ) : (
-                                                            <>
-                                                                <FiTrash2 size={14} />
-                                                                <span>Delete</span>
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center text-sm mb-4 gap-3">
+                                                <span className="text-slate-500 truncate min-w-0">{doctor.location || 'Hospital'}</span>
+                                                <span className="font-semibold text-slate-800 shrink-0">Rs. {doctor.fee}</span>
+                                            </div>
+
+                                            <div className="mt-auto grid grid-cols-2 gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEditDoctor(doctor)}
+                                                    disabled={deletingDoctorId === doctor._id}
+                                                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-sm font-medium text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title={`Edit ${doctor.name}`}
+                                                >
+                                                    <FiEdit3 size={14} />
+                                                    <span>Edit</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteDoctor(doctor._id, doctor.name)}
+                                                    disabled={deletingDoctorId === doctor._id}
+                                                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white border border-red-200 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title={`Delete ${doctor.name}`}
+                                                >
+                                                    {deletingDoctorId === doctor._id ? (
+                                                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                                    ) : (
+                                                        <>
+                                                            <FiTrash2 size={14} />
+                                                            <span>Delete</span>
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
